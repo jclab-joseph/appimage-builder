@@ -13,11 +13,11 @@ import os
 import logging
 from urllib import request
 
-from appimagebuilder.gateways.appimagetool import AppImageToolCommand
-
+from appimagebuilder.gateways.appimagekit_docker import AppImageDockerBuilderCommand
 
 class AppImageCreator:
     def __init__(self, recipe):
+        self.preloader_tar = recipe.preloader.tar() or "None"
         self.app_dir = recipe.AppDir.path()
         self.target_arch = recipe.AppImage.arch()
         self.app_name = recipe.AppDir.app_info.name()
@@ -47,14 +47,10 @@ class AppImageCreator:
     def create(self):
         self._assert_target_architecture()
 
-        runtime_url = self._get_runtime_url()
-        runtime_path = self._get_runtime_path()
-        self._download_runtime_if_required(runtime_path, runtime_url)
+        self._generate_appimage()
 
-        self._generate_appimage(runtime_path)
-
-    def _generate_appimage(self, runtime_path):
-        appimage_tool = AppImageToolCommand(self.app_dir, self.target_file)
+    def _generate_appimage(self):
+        appimage_tool = AppImageDockerBuilderCommand(self.app_dir, self.target_file)
 
         # appimagetool uses different architecture names than AppImageKit runtime releases
         if self.target_arch == "aarch64":
@@ -64,11 +60,12 @@ class AppImageCreator:
         else:
             appimage_tool_arch = self.target_arch
 
+        appimage_tool.preloader_tar = self.preloader_tar
         appimage_tool.target_arch = appimage_tool_arch
         appimage_tool.update_information = self.update_information
         appimage_tool.guess_update_information = self.guess_update_information
         appimage_tool.sign_key = self.sing_key
-        appimage_tool.runtime_file = runtime_path
+        # appimage_tool.runtime_file = runtime_path
         appimage_tool.run()
 
     def _download_runtime_if_required(self, runtime_path, runtime_url):
