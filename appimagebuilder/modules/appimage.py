@@ -17,7 +17,7 @@ from appimagebuilder.gateways.appimagetool import AppImageToolCommand
 
 class AppImageCreator:
     def __init__(self, recipe):
-        self.preloader_tar = recipe.preloader.tar() or "None"
+        self.preloader_tar = recipe.preloader.tar() or None
         self.app_dir = recipe.AppDir.path()
         self.target_arch = recipe.AppImage.arch()
         self.app_name = recipe.AppDir.app_info.name()
