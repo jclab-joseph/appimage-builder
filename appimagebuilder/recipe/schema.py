@@ -21,6 +21,10 @@ class RecipeSchema:
         self.version = Schema(int, ignore_extra_keys=True)
         self.script = Schema(Or(str, [str]))
 
+        self.preloader = {
+            "tar": str
+        }
+
         self.v1_app_info = {
             "id": str,
             "name": str,
@@ -101,6 +105,7 @@ class RecipeSchema:
             {
                 "version": int,
                 Optional("script"): self.script,
+                Optional("preloader"): self.preloader,
                 "AppDir": self.v1_appdir,
                 "AppImage": self.v1_appimage,
             }

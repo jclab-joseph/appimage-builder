@@ -15,9 +15,9 @@ from urllib import request
 
 from appimagebuilder.gateways.appimagetool import AppImageToolCommand
 
-
 class AppImageCreator:
     def __init__(self, recipe):
+        self.preloader_tar = recipe.preloader.tar() or None
         self.app_dir = recipe.AppDir.path()
         self.target_arch = recipe.AppImage.arch()
         self.app_name = recipe.AppDir.app_info.name()
@@ -64,6 +64,7 @@ class AppImageCreator:
         else:
             appimage_tool_arch = self.target_arch
 
+        appimage_tool.preloader_tar = self.preloader_tar
         appimage_tool.target_arch = appimage_tool_arch
         appimage_tool.update_information = self.update_information
         appimage_tool.guess_update_information = self.guess_update_information
@@ -83,7 +84,7 @@ class AppImageCreator:
         return runtime_path
 
     def _get_runtime_url(self):
-        runtime_url_template = "https://github.com/AppImage/AppImageKit/releases/download/continuous/runtime-%s"
+        runtime_url_template = "https://github.com/jclab-joseph/AppImageKit/releases/download/continuous/runtime-%s"
         runtime_url = runtime_url_template % self.target_arch
         return runtime_url
 

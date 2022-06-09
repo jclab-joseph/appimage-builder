@@ -22,6 +22,7 @@ class AppImageToolCommand(Command):
         super().__init__("appimagetool")
 
         self.app_dir = app_dir
+        self.preloader_tar = None
         self.runtime_file = None
         self.update_information = None
         self.guess_update_information = False
@@ -46,6 +47,9 @@ class AppImageToolCommand(Command):
         command = ["appimagetool"]
         if self.runtime_file:
             command.extend(["--runtime-file", self.runtime_file])
+
+        if self.preloader_tar:
+            command.extend(["--preloader-tar", self.preloader_tar])
 
         if self.sign_key:
             command.extend(["--sign", "--sign-key", self.sign_key])

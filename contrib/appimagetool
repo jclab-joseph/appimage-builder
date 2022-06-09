@@ -1,0 +1,87 @@
+#!/bin/bash
+
+runtime_file=
+preloader_tar=
+sign=
+sign_key=
+update_information=
+guess=
+appdir=
+target_file=
+
+function checkArgIsValue() {
+	local name=$1
+	if [ -z "$2" ] || [ "${2:0:1}" = "-" ]; then
+		echo "Error: Argument for ${name} is missing" >&2
+		exit 1
+	fi
+	return 0
+}
+
+while (( "$#")); do
+	case "$1" in
+		--runtime-file)
+			checkArgIsValue "$1" "$2"
+			runtime_file="$2"
+			shift
+			;;
+		--preloader-tar)
+			checkArgIsValue "$1" "$2"
+			preloader_tar="$2"
+			shift
+			;;
+		--sign)
+			sign=1
+			;;
+		--sign-key)
+			checkArgIsValue "$1" "$2"
+			sign_key="$2"
+			shift
+			;;
+		--updateinformation)
+			checkArgIsValue "$1" "$2"
+			update_information="$2"
+			shift
+			;;
+		--guess)
+			guess=1
+			;;
+		-*|--*)
+			echo "Error: Unsupported flat: $1" >&2
+			exit 1
+			;;
+		*)
+			break
+			;;
+	esac
+	shift
+done
+
+appdir=$1
+target_file=$2
+
+echo "runtime_file=${runtime_file}"
+echo "preloader_tar=${preloader_tar}"
+echo "sign=${sign}"
+echo "sign_key=${sign_key}"
+echo "update_information=${update_information}"
+echo "guess=${guess}"
+echo "appdir=${appdir}"
+echo "target_file=${target_file}"
+
+set -ex
+
+sqfs_file="$(mktemp /tmp/aimg.XXXXXX.sqfs)"
+rm ${sqfs_file}
+mksquashfs "${appdir}/" "${sqfs_file}"
+
+objcopy_args=("objcopy" "--add-section" ".aimg_sqfs=${sqfs_file}" "--set-section-flags" ".aimg_sqfs=noload,readonly")
+
+[ -z "${preloader_tar}" ] || objcopy_args+=("--add-section" ".aimg_pre_tar=${preloader_tar}" "--set-section-flags" ".aimg_pre_tar=noload,readonly" "--set-section-alignment" ".aimg_pre_tar=4096")
+
+objcopy_args+=("${runtime_file}" ${target_file})
+
+echo "${objcopy_args[@]}"
+
+${objcopy_args[@]}
+
